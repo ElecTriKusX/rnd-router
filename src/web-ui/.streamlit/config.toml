@@ -1,0 +1,6 @@
+[theme]
+base = "light"
+backgroundColor = "#F2F2F2"         # light grey main background
+secondaryBackgroundColor = "#E0E0E0" # medium grey for sidebar/widgets
+primaryColor = "#6B6B6B"           # grey accent (buttons/focus)
+textColor = "#1F1F1F"              # dark grey/near-black text
