@@ -2,37 +2,7 @@ from pathlib import Path
 import json
 import re
 from typing import List, Dict, Optional
-from pydantic import BaseModel
-
-"""
-МОДЕЛИ ПАЙДАНТИК
-"""
-
-class Publication(BaseModel):
-    title: str
-    year: int | None
-    annotation: str | None
-    journal: str | None
-    link: str | None
-
-class Grant(BaseModel):
-    number: str
-    years: str
-    role: str
-    title: str
-    annotation: str | None
-    link: str | None
-
-class Profile(BaseModel):
-    id: str
-    full_name: str
-    unit: str
-    position: str | None
-    degree: str | None
-    publications: list[Publication]
-    grants: list[Grant]
-    links: dict[str, str]
-    # можно еще добавить "## Заметки сборщика" в виде dict[str, str]
+from models import Publication, Grant, Profile
 
 """
 ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ГЕНЕРАЦИЯ id ПО full_name ДЛЯ ПРОФИЛЯ НПР

@@ -3,24 +3,22 @@ from prompt import read_prompt, validate_json
 from dotenv import load_dotenv
 import logging
 from typing import Any
-from pydantic import BaseModel, ValidationError
+from pydantic import ValidationError
 from typing import List
+from models import Grant, DecomposeResponse
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-class Subtask(BaseModel):
-    id: int
-    topic: str
-    keywords: List[str]
-
-class DecomposeResponse(BaseModel):
-    subtasks: List[Subtask]
-
 class DecomposeError(Exception):
     pass
 
-def decompose(llm: LLM, grant_description: str, prompt_version: int) -> DecomposeResponse:
+def decompose(llm: LLM, grant: Grant, prompt_version: int) -> DecomposeResponse:
+    
+    grant_description = grant.title
+    if grant.annotation is not None:
+        grant_description = f"{grant.title}. {grant.annotation}"
+    
     raw_prompt = read_prompt(f"decompose_v{prompt_version}")
     prompt = raw_prompt.replace("{grant_description}", grant_description)
 
@@ -43,16 +41,15 @@ def decompose(llm: LLM, grant_description: str, prompt_version: int) -> Decompos
 if __name__ == '__main__':
     llm = LLM()
     
-    test_data = [
-        """Биокатализ в химии акриловых полимеров, применяемых 
-в горнодобывающей промышленности и для интенсификации нефтедобычи""",
-        """Система противоэпилептической электростимуляции блуждающего нерва""",
-        """Разработка технологии термической обработки для повышения усталостных свойств 
-полой рабочей лопатки вентилятора из титанового сплава 
-и создание установки термической обработки полой лопатки для
-реализации технологии в серийном технологическом процессе""",
-    ]
+    test_data = Grant(
+        number="23-12-00123",
+        years="2023-2025",
+        role="Исполнитель",
+        title="Биокатализ в химии акриловых полимеров, применяемых в горнодобывающей промышленности и для интенсификации нефтедобычи",
+        annotation=None,
+        link=None,
+    )
 
-    result = decompose(llm, test_data[0], 2)
+    result = decompose(llm, test_data, 2)
     print(result)
     print(type(result))
