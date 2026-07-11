@@ -18,6 +18,7 @@ class Grant(BaseModel):
 
 class Profile(BaseModel):
     id: str
+    email: str | None
     full_name: str
     unit: str
     position: str | None
@@ -41,3 +42,8 @@ class Match(BaseModel):
 
 class RerankResponse(BaseModel):
     top: List[Match]
+
+class Email(BaseModel):
+    to: str
+    subject: str
+    body: str
