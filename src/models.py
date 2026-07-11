@@ -27,9 +27,17 @@ class Profile(BaseModel):
     links: dict[str, str]
 
 class Subtask(BaseModel):
-    id: int
+    id: str
     topic: str
     keywords: List[str]
 
 class DecomposeResponse(BaseModel):
     subtasks: List[Subtask]
+
+class Match(BaseModel):
+    profile_id: str
+    score: float
+    reasons: List[str]
+
+class RerankResponse(BaseModel):
+    top: List[Match]
