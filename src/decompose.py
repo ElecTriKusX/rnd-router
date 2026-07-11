@@ -40,46 +40,6 @@ def decompose(llm: LLM, grant_description: str, prompt_version: int) -> Decompos
     logger.error(f"НDecompose failed after {retry_attempts} retries")
     raise DecomposeError(f"Unable to get a valid JSON response for description: {grant_description}")
 
-def validate_subtasks_structure(data: dict) -> bool:
-    # Проверяем наличие корневого ключа
-    if "subtasks" not in data:
-        return False
-
-    subtasks = data["subtasks"]
-    if not isinstance(subtasks, list):
-        return False
-
-    if not subtasks:
-        return False
-
-    # Проверяем подзадачи
-    for idx, task in enumerate(subtasks):
-        if not isinstance(task, dict):
-            return False
-
-        # Проверяем id
-        if "id" not in task:
-            return False
-        if not isinstance(task["id"], int):
-            return False
-
-        # Проверяем topic
-        if "topic" not in task:
-            return False
-        if not isinstance(task["topic"], str):
-            return False
-
-        # Проверяем keywords
-        if "keywords" not in task:
-            return False
-        if not isinstance(task["keywords"], list):
-            return False
-        for kw_idx, kw in enumerate(task["keywords"]):
-            if not isinstance(kw, str):
-                return False
-
-    return True
-
 if __name__ == '__main__':
     llm = LLM()
     
