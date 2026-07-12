@@ -11,12 +11,12 @@ import numpy as np
 import pyarrow as pa
 import pyarrow.parquet as pq
 
-from llm import LLM
+from infrastructure.yandex_llm import LLM
 
 logger = logging.getLogger(__name__)
 
-SRC_DIR = Path(__file__).resolve().parents[1]
-DATA_DIR = SRC_DIR / "data"
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
+DATA_DIR = PROJECT_ROOT / "data"
 
 PROFILES_PATH = DATA_DIR / "profiles.json"
 INDEX_PATH = DATA_DIR / "index.parquet"

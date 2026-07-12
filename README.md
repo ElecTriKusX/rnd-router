@@ -13,11 +13,12 @@ The foundation backend lives in `backend/src/`:
 
 `frontend/` is reserved for the future React + TypeScript client. The existing Streamlit prototype will be kept separately as legacy code until it is replaced.
 
-## Commands
+## Команды backend
 
 ```powershell
-& C:\Users\elect\.local\bin\uv.exe run pytest
-& C:\Users\elect\.local\bin\uv.exe run uvicorn --app-dir backend/src api.app:app --reload
+cd backend
+uv run pytest
+uv run uvicorn --app-dir src api.app:app --reload
 ```
 
-See [docs/foundation.md](docs/foundation.md) for the model rationale and a walkthrough of pytest and FastAPI.
+Подробности по backend: [backend/README.md](backend/README.md).

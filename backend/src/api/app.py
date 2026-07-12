@@ -3,8 +3,9 @@
 from fastapi import Depends, FastAPI, HTTPException, status
 from pydantic import BaseModel, Field
 
-from domain.models import MatchResponse, ResearchRequest
-from services.ports import MatchingService
+from domain.models import CandidateMatch, EmailDraft, MatchResponse, ResearchRequest
+from services.router import RNDService
+from services.ports import RouterService
 
 
 class MatchCommand(BaseModel):
@@ -12,17 +13,14 @@ class MatchCommand(BaseModel):
     top_n: int = Field(default=5, ge=1, le=20)
 
 
-class UnconfiguredMatchingService:
-    """Безопасная заглушка до подключения реального индекса и LLM."""
-
-    def match(self, request: ResearchRequest, top_n: int) -> MatchResponse:
-        del request, top_n
-        raise RuntimeError("Сервис подбора пока не подключён")
+class EmailDraftCommand(BaseModel):
+    request: ResearchRequest
+    candidate: CandidateMatch
 
 
-def get_matching_service() -> MatchingService:
-    """Точка, где появится подключение production-сервиса после поставки индекса."""
-    return UnconfiguredMatchingService()
+def get_router_service() -> RouterService:
+    """Возвращает сервис без раннего обращения к данным, ключам или Yandex."""
+    return RNDService()
 
 
 def create_app() -> FastAPI:
@@ -43,11 +41,24 @@ def create_app() -> FastAPI:
     )
     def match_researchers(
         command: MatchCommand,
-        service: MatchingService = Depends(get_matching_service),
+        service: RouterService = Depends(get_router_service),
     ) -> MatchResponse:
         try:
             return service.match(command.request, command.top_n)
-        except RuntimeError as error:
+        except (RuntimeError, EnvironmentError, FileNotFoundError, ValueError) as error:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail=str(error),
+            ) from error
+
+    @app.post("/api/v1/email-drafts", response_model=EmailDraft, status_code=status.HTTP_200_OK)
+    def create_email_draft(
+        command: EmailDraftCommand,
+        service: RouterService = Depends(get_router_service),
+    ) -> EmailDraft:
+        try:
+            return service.create_email_draft(command.request, command.candidate)
+        except (RuntimeError, EnvironmentError, FileNotFoundError, ValueError) as error:
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                 detail=str(error),

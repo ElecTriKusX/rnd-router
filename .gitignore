@@ -35,6 +35,7 @@ Thumbs.db
 .env.local
 
 .pytest_cache/
+.pytest-tmp/
 .coverage
 
 # Runtime data and frontend build output
