@@ -2,7 +2,7 @@ from pathlib import Path
 import json
 import re
 from typing import List, Dict, Optional
-from models import Publication, Grant, Profile
+from domain.models import Grant, Profile, Publication
 
 """
 ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ГЕНЕРАЦИЯ id ПО full_name ДЛЯ ПРОФИЛЯ НПР
@@ -92,21 +92,47 @@ def _flush_pub_blocks(lines: List[str], year: Optional[int]) -> List[Publication
 
 
 def _build_pub(par: List[str], year: int) -> Publication:
-    title = par[0].strip()
-    journal = annotation = None
-    for ln in par[1:]:
-        low = ln.lower()
-        if low.startswith("журнал"):
-            journal = kv_value(ln)
-        elif low.startswith("аннотация"):
-            annotation = kv_value(ln)
-    return Publication(title=title, year=year, annotation=annotation, journal=journal)
+    title = journal = annotation = link = None
+    current_field = None
+
+    for ln in par:
+        clean = ln.lstrip("- \t").strip()
+        low = clean.lower()
+
+        if low.startswith("название:"):
+            title = kv_value(clean).strip('"')
+            current_field = "title"
+        elif low.startswith("источник:"):
+            journal = kv_value(clean).strip('"')
+            current_field = "journal"
+        elif low.startswith("аннотация:"):
+            annotation = kv_value(clean).strip('"')
+            current_field = "annotation"
+        elif low.startswith("ссылка:"):
+            link = kv_value(clean)
+            current_field = "link"
+        elif current_field == "annotation" and annotation:
+            annotation += "\n" + clean
+
+    if annotation and annotation.lower() == "без аннотации":
+        annotation = None
+
+    return Publication(
+        title=title or "",
+        year=year,
+        annotation=annotation,
+        journal=journal,
+        link=link,
+    )
 
 """
 ПАРСИНГ ГРАНТОВ
 """
 
-grant_hdr = re.compile(r"^([^\(]+)\s*\(([^,]+),\s*([^\)]+)\)")
+grant_hdr = re.compile(
+    r"^НИР:\s*грант\s*№\s*(.+?)\.\s*(.+?)\.\s*(\d{4})\.?$",
+    re.IGNORECASE,
+)
 
 def parse_grants(lines: List[str]) -> List[Grant]:
     """
@@ -131,18 +157,43 @@ def parse_grants(lines: List[str]) -> List[Grant]:
 
 def _build_grant(lines: List[str]) -> Grant:
     m = grant_hdr.match(lines[0])
+
     if m:
-        number, years, role = (m.group(1).strip(), m.group(2).strip(), m.group(3).strip())
+        number = m.group(1).strip()
+        years = m.group(3).strip()
+        role = ""
     else:
-        number, years, role = lines[0], "", ""
-    title = annotation = ""
+        number = lines[0]
+        years = ""
+        role = ""
+
+    title = annotation = link = None
+    current_field = None
+
     for ln in lines[1:]:
-        low = ln.lower()
-        if low.startswith("название"):
-            title = kv_value(ln)
-        elif low.startswith("аннотация"):
-            annotation = kv_value(ln)
-    return Grant(number=number, years=years, role=role, title=title, annotation=annotation or None)
+        clean = ln.lstrip("- \t").strip()
+        low = clean.lower()
+
+        if low.startswith("название:"):
+            title = kv_value(clean).strip('"')
+            current_field = "title"
+        elif low.startswith("аннотация:"):
+            annotation = kv_value(clean).strip('"')
+            current_field = "annotation"
+        elif low.startswith("ссылка:"):
+            link = kv_value(clean)
+            current_field = "link"
+        elif current_field == "annotation" and annotation:
+            annotation += "\n" + clean
+
+    return Grant(
+        number=number,
+        years=years,
+        role=role,
+        title=title or "",
+        annotation=annotation,
+        link=link,
+    )
 
 """
 ПАРСИНГ ССЫЛОК
@@ -179,6 +230,7 @@ def parse_profile_md(text: str) -> Profile:
 
     unit = position = degree = None
     for ln in header_lines:
+        ln = ln.lstrip("- ").strip()
         low = ln.lower()
         if low.startswith("подраздел"):
             unit = kv_value(ln)
@@ -191,6 +243,15 @@ def parse_profile_md(text: str) -> Profile:
     pubs = parse_publications(section(lines, "Публикации"))
     grants = parse_grants(section(lines, "Гранты и проекты"))
     links = parse_links(section(lines, "Ссылки"))
+    # Email может приходить отдельной ссылкой или полем в исходном Markdown-профиле.
+    email = next(
+        (
+            value
+            for key, value in links.items()
+            if "@" in value or key.lower() in {"email", "e-mail", "электронная почта"}
+        ),
+        None,
+    )
 
     return Profile(
         id=generate_id(full_name),
@@ -201,6 +262,7 @@ def parse_profile_md(text: str) -> Profile:
         publications=pubs,
         grants=grants,
         links=links,
+        email=email,
     )
 
 
@@ -208,7 +270,7 @@ def parse_profile_md(text: str) -> Profile:
 
 def main():
     """читает md файлы, парсит в profiles.json и выводит статистику"""
-    root = Path(__file__).resolve().parents[0]
+    root = Path(__file__).resolve().parents[3]
     src_dir = root / "data" / "profiles_raw"
     out_path = root / "data" / "profiles.json"
 

@@ -1,0 +1,15 @@
+[
+  {
+    "id": "ivanov_ii",
+    "full_name": "Иванов Иван Иванович",
+    "unit": "Институт химии",
+    "position": "Доцент",
+    "degree": "к.х.н.",
+    "email": "ivanov@example.test",
+    "publications": [
+      {"title": "Катализ полимеризации", "year": 2024}
+    ],
+    "grants": [],
+    "links": {}
+  }
+]

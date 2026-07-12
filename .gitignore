@@ -1,3 +1,46 @@
+# Виртуальное окружение
+.venv/
+venv/
+env/
+
+# Локальные файлы uv
+.python-version
+uv.lock
+
+# Файлы Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Системные
+.DS_Store
+Thumbs.db
+
+# Переменные окружения
 .env
-.venv
-__pycache__
+.env.local
+
+.pytest_cache/
+.pytest-tmp/
+.coverage
+
+# Runtime data and frontend build output
+data/profiles.json
+data/index.parquet
+data/profiles_raw/
+frontend/node_modules/
+frontend/dist/
