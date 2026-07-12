@@ -1,0 +1,74 @@
+import pytest
+from fastapi.testclient import TestClient
+
+from api.app import app, get_matching_service
+from domain.models import (
+    CandidateMatch,
+    MatchResponse,
+    Profile,
+    ResearchRequest,
+    Subtask,
+    SubtaskMatches,
+)
+
+
+class StubMatchingService:
+    """A deterministic replacement for Yandex and the vector index in tests."""
+
+    def match(self, request: ResearchRequest, top_n: int) -> MatchResponse:
+        candidate = CandidateMatch(
+            profile=Profile(id="p1", full_name="Иванов Иван", email="ivanov@example.test"),
+            score=0.91,
+            reasons=["Есть публикация по теме запроса"],
+        )
+        return MatchResponse(
+            request=request,
+            results=[
+                SubtaskMatches(
+                    subtask=Subtask(id=1, topic="Катализ", keywords=["катализ"]),
+                    candidates=[candidate][:top_n],
+                )
+            ],
+        )
+
+
+@pytest.fixture
+def configured_client() -> TestClient:
+    app.dependency_overrides[get_matching_service] = StubMatchingService
+    yield TestClient(app)
+    app.dependency_overrides.clear()
+
+
+def test_match_endpoint_returns_frontend_contract(configured_client: TestClient) -> None:
+    response = configured_client.post(
+        "/api/v1/matches",
+        json={
+            "request": {
+                "title": "Новый полимер",
+                "description": "Нужен исследователь по катализу.",
+            },
+            "top_n": 5,
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["results"][0]["candidates"][0]["profile"]["id"] == "p1"
+    assert body["results"][0]["candidates"][0]["score"] == 0.91
+
+
+def test_match_endpoint_validates_client_input(configured_client: TestClient) -> None:
+    response = configured_client.post("/api/v1/matches", json={"request": {"title": "", "description": "x"}})
+
+    assert response.status_code == 422
+
+
+def test_match_endpoint_reports_unconfigured_service() -> None:
+    client = TestClient(app)
+
+    response = client.post(
+        "/api/v1/matches",
+        json={"request": {"title": "Тема", "description": "Описание"}},
+    )
+
+    assert response.status_code == 503
