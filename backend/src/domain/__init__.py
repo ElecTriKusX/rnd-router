@@ -1,1 +1,1 @@
-"""Domain models and contracts."""
+"""Доменные модели и контракты."""

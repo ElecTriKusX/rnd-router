@@ -1,4 +1,4 @@
-"""Canonical data contracts shared by parsing, ML, API, and UI layers."""
+"""Единые контракты данных для парсинга, ML, API и интерфейса."""
 
 from pydantic import BaseModel, Field
 
@@ -21,7 +21,7 @@ class Grant(BaseModel):
 
 
 class Profile(BaseModel):
-    """A researcher record, regardless of whether it comes from a parser or API."""
+    """Карточка исследователя независимо от источника: парсера, поиска или API."""
 
     id: str = Field(min_length=1)
     full_name: str = Field(min_length=1)
@@ -35,7 +35,7 @@ class Profile(BaseModel):
 
 
 class ResearchRequest(BaseModel):
-    """The incoming customer request; it is not confused with a historic grant."""
+    """Входящий запрос клиента, не смешиваемый с историческим грантом."""
 
     title: str = Field(min_length=1, max_length=300)
     description: str = Field(min_length=1, max_length=20_000)
@@ -52,7 +52,7 @@ class Subtask(BaseModel):
 
 
 class CandidateMatch(BaseModel):
-    """A profile plus the explanation of its fit for one subtask."""
+    """Профиль и объяснение того, почему он подходит для конкретной подзадачи."""
 
     profile: Profile
     score: float = Field(ge=0, le=1)

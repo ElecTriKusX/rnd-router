@@ -1,4 +1,4 @@
-"""Interfaces that let tests replace external services without network calls."""
+"""Интерфейсы для замены внешних сервисов в тестах без сетевых вызовов."""
 
 from typing import Protocol
 
@@ -7,4 +7,4 @@ from domain.models import MatchResponse, ResearchRequest
 
 class MatchingService(Protocol):
     def match(self, request: ResearchRequest, top_n: int) -> MatchResponse:
-        """Return ranked researchers for every derived subtask."""
+        """Возвращает ранжированных исследователей для всех выделенных подзадач."""

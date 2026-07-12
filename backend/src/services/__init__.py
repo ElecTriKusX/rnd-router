@@ -1,1 +1,1 @@
-"""Application services and use cases."""
+"""Прикладные сервисы и сценарии использования."""

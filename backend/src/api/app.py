@@ -1,4 +1,4 @@
-"""FastAPI entry point. Business dependencies are injected, never global."""
+"""Точка входа FastAPI: бизнес-зависимости передаются явно, а не создаются глобально."""
 
 from fastapi import Depends, FastAPI, HTTPException, status
 from pydantic import BaseModel, Field
@@ -13,15 +13,15 @@ class MatchCommand(BaseModel):
 
 
 class UnconfiguredMatchingService:
-    """Safe default until the real vector index and LLM are wired."""
+    """Безопасная заглушка до подключения реального индекса и LLM."""
 
     def match(self, request: ResearchRequest, top_n: int) -> MatchResponse:
         del request, top_n
-        raise RuntimeError("Matching service is not configured")
+        raise RuntimeError("Сервис подбора пока не подключён")
 
 
 def get_matching_service() -> MatchingService:
-    """Production wiring is added only after the real index is delivered."""
+    """Точка, где появится подключение production-сервиса после поставки индекса."""
     return UnconfiguredMatchingService()
 
 

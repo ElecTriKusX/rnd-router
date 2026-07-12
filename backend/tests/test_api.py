@@ -13,7 +13,7 @@ from domain.models import (
 
 
 class StubMatchingService:
-    """A deterministic replacement for Yandex and the vector index in tests."""
+    """Предсказуемая замена Yandex и векторного индекса для API-тестов."""
 
     def match(self, request: ResearchRequest, top_n: int) -> MatchResponse:
         candidate = CandidateMatch(

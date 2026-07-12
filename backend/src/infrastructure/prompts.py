@@ -1,4 +1,4 @@
-"""Prompt loading that is independent from the process working directory."""
+"""Загрузка промптов без зависимости от текущей папки запущенного процесса."""
 
 from pathlib import Path
 

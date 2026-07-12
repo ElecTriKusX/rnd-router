@@ -1,1 +1,1 @@
-"""Adapters for external systems and local data."""
+"""Адаптеры для внешних систем и локальных данных."""
