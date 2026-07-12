@@ -3,26 +3,27 @@ from typing import List
 
 class Publication(BaseModel):
     title: str
-    year: int | None
-    annotation: str | None
-    journal: str | None
-    link: str | None
+    year: int | None = None
+    annotation: str | None = None
+    journal: str | None = None
+    link: str | None = None
+
 
 class Grant(BaseModel):
     number: str
     years: str
     role: str
     title: str
-    annotation: str | None
-    link: str | None
+    annotation: str | None = None
+    link: str | None = None
+
 
 class Profile(BaseModel):
     id: str
-    email: str | None
     full_name: str
     unit: str
-    position: str | None
-    degree: str | None
+    position: str | None = None
+    degree: str | None = None
     publications: list[Publication]
     grants: list[Grant]
     links: dict[str, str]
