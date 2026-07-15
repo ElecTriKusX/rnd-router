@@ -19,6 +19,8 @@ class DecomposeCommand(BaseModel):
 class EmailDraftCommand(BaseModel):
     request: ResearchRequest
     candidate: CandidateMatch
+    facts: list[str] = Field(default_factory=list)
+    instruction: str = ""
 
 
 def get_router_service() -> RouterService:
@@ -77,7 +79,18 @@ def create_app() -> FastAPI:
         service: RouterService = Depends(get_router_service),
     ) -> EmailDraft:
         try:
-            return service.create_email_draft(command.request, command.candidate)
+            context = []
+            if command.facts:
+                context.append("Факты, которые нужно использовать в письме:\n" + "\n".join(f"- {fact}" for fact in command.facts))
+            if command.instruction.strip():
+                context.append("Дополнительная инструкция для письма:\n" + command.instruction.strip())
+            request = command.request
+            if context:
+                request = ResearchRequest(
+                    title=request.title,
+                    description=f"{request.description}\n\n" + "\n\n".join(context),
+                )
+            return service.create_email_draft(request, command.candidate)
         except (RuntimeError, EnvironmentError, FileNotFoundError, ValueError) as error:
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,

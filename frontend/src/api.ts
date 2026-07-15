@@ -44,6 +44,6 @@ export function findMatches(request: RequestPayload, subtasks: Subtask[]) {
   })
 }
 
-export function createEmailDraft(request: RequestPayload, candidate: Candidate) {
-  return post<EmailDraft>('/api/v1/email-drafts', { request, candidate })
+export function createEmailDraft(request: RequestPayload, candidate: Candidate, facts: string[], instruction: string) {
+  return post<EmailDraft>('/api/v1/email-drafts', { request, candidate, facts, instruction })
 }

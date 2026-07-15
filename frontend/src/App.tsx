@@ -163,7 +163,7 @@ export function App() {
     if (!activeCandidate) return
     setLoading('draft'); setError(null)
     try {
-      const response = await createEmailDraft(requestPayload(selected), activeCandidate)
+      const response = await createEmailDraft(requestPayload(selected), activeCandidate, selectedFacts, instruction)
       updateSelected((item) => ({ ...item, emailDraft: response }))
       setScreen('draft')
     } catch (cause) {
