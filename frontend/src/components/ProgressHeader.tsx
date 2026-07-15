@@ -31,7 +31,7 @@ export function ProgressHeader({ stage, availableStatus, onNavigate }: ProgressH
       {steps.map((step, index) => {
         const isCurrent = step.position === current
         const isAvailable = step.position <= availableStatus
-        const isCompleted = isAvailable && step.position < current
+        const isCompleted = isAvailable && !isCurrent
         const canNavigate = isAvailable && !isCurrent
 
         return <div className="progress__group" key={step.stage}>
