@@ -37,7 +37,8 @@ class RNDService:
         scores = {}
 
         for subtask in decompose.subtasks:
-            profiles_and_scores = retriever.retrieve(f"{request.text} {subtask.topic}", k=5)
+            profiles_and_scores = retriever.retrieve(f"{request.text} {subtask.topic}", k=10)
+            print(len(profiles_and_scores))
             subtask_profiles[subtask.id] = []
             for profile, score in profiles_and_scores:
                 subtask_profiles[subtask.id].append(profile)
@@ -56,6 +57,9 @@ class RNDService:
         
         for subtask in decompose.subtasks:
             subtask_candidates = [candidates[profile.id] for profile in subtask_profiles[subtask.id]]
+
+            subtask_candidates.sort(key=lambda c: c.score, reverse=True)
+
             results.append(SubtaskMatches(subtask=subtask, candidates=subtask_candidates))
 
         return MatchResponse(request=request, results=results)
