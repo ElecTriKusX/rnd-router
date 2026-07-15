@@ -1,4 +1,4 @@
-import { ArrowRight, Database, Info, Plus, X } from 'lucide-react'
+import { ArrowRight, Check, Database, Info, LoaderCircle, Plus, X } from 'lucide-react'
 import { FormEvent, useEffect, useRef, useState } from 'react'
 import type { RequestItem } from '../types'
 
@@ -38,6 +38,11 @@ export function RequestEditor({
     if (nextTag && !request.tags.some((item) => item.toLocaleLowerCase() === nextTag.toLocaleLowerCase())) {
       onChange({ tags: [...request.tags, nextTag] })
     }
+    setTag('')
+    setAddingTag(false)
+  }
+
+  const cancelAddingTag = () => {
     setTag('')
     setAddingTag(false)
   }
@@ -104,10 +109,24 @@ export function RequestEditor({
             ref={tagInput}
             value={tag}
             onChange={(event) => setTag(event.target.value)}
-            onBlur={() => { if (!tag.trim()) setAddingTag(false) }}
+            onKeyDown={(event) => {
+              if (event.key === 'Escape') cancelAddingTag()
+            }}
             placeholder="Новый тег"
             aria-label="Новый тег"
           />
+          <button className="tag-input__confirm" type="submit" aria-label="Добавить тег" title="Добавить тег">
+            <Check size={13} />
+          </button>
+          <button
+            className="tag-input__cancel"
+            type="button"
+            aria-label="Отменить добавление тега"
+            title="Отменить"
+            onClick={cancelAddingTag}
+          >
+            <X size={13} />
+          </button>
         </form> : <button
           className="add-tag"
           data-node-id="sUt8m"
@@ -140,6 +159,7 @@ export function RequestEditor({
           disabled={!canContinue || loading}
           onClick={onContinue}
         >
+          {loading && <LoaderCircle className="button__spinner" size={14} />}
           {loading ? 'Обработка…' : hasDecomposition ? 'Далее' : 'Перейти к декомпозиции'}
           {!loading && <ArrowRight size={14} />}
         </button>

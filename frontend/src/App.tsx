@@ -35,11 +35,16 @@ function contentChangedSinceSave(request: RequestItem) {
     || request.description !== request.saved.description
 }
 
+function workflowStagePosition(stage: WorkflowStage) {
+  return ({ request: 0, decomposition: 1, results: 2, email: 3, draft: 4 } as const)[stage]
+}
+
 export function App() {
   const [requests, setRequests] = useState<RequestItem[]>(initialRequests)
   const [selectedId, setSelectedId] = useState(initialRequests[0].id)
   const [search, setSearch] = useState('')
   const [stage, setStage] = useState<WorkflowStage>('request')
+  const [stageDirection, setStageDirection] = useState<'forward' | 'backward'>('forward')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [selectedCandidateIds, setSelectedCandidateIds] = useState<Record<string, string[]>>({})
@@ -61,6 +66,12 @@ export function App() {
     setRequests((items) => items.map((request) => request.id === selectedId ? updater(request) : request))
   }
 
+  const navigateToStage = (nextStage: WorkflowStage) => {
+    if (nextStage === stage) return
+    setStageDirection(workflowStagePosition(nextStage) > workflowStagePosition(stage) ? 'forward' : 'backward')
+    setStage(nextStage)
+  }
+
   const addRequest = () => {
     const id = createRequestId(requests)
     const next: RequestItem = {
@@ -77,7 +88,7 @@ export function App() {
     setRequests((items) => [next, ...items])
     setSelectedId(id)
     setSearch('')
-    setStage('request')
+    navigateToStage('request')
     setError('')
   }
 
@@ -101,14 +112,14 @@ export function App() {
       setActiveEmailSubtask(null)
       setEmailDraft(null)
     }
-    setStage('request')
+    navigateToStage('request')
     setError('')
   }
 
   const continueFromRequest = async () => {
     if (!selected) return
     if (selected.status !== 'new' && selected.status >= 2 && selected.subtasks.length > 0) {
-      setStage('decomposition')
+      navigateToStage('decomposition')
       return
     }
 
@@ -132,7 +143,7 @@ export function App() {
         subtasks: response.subtasks,
         results: [],
       }))
-      setStage('decomposition')
+      navigateToStage('decomposition')
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Не удалось выполнить декомпозицию')
     } finally {
@@ -157,7 +168,7 @@ export function App() {
   const continueFromDecomposition = async () => {
     if (!selected) return
     if (selected.status !== 'new' && selected.status >= 3 && selected.results.length > 0) {
-      setStage('results')
+      navigateToStage('results')
       return
     }
 
@@ -178,7 +189,7 @@ export function App() {
         ...selection,
         [selectedId]: initialResult?.candidates.slice(0, 2).map((candidate) => candidate.profile.id) ?? [],
       }))
-      setStage('results')
+      navigateToStage('results')
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Не удалось подобрать экспертов')
     } finally {
@@ -204,7 +215,7 @@ export function App() {
         emailInstruction,
       )
       setEmailDraft(draft)
-      setStage('draft')
+      navigateToStage('draft')
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Не удалось создать черновик письма')
     } finally {
@@ -218,8 +229,9 @@ export function App() {
       <ProgressHeader
         stage={stage}
         availableStatus={availableStatus}
-        onNavigate={setStage}
+        onNavigate={navigateToStage}
       />
+      <div key={stage} className={`stage-transition stage-transition--${stageDirection}`}>
       {selected && stage === 'request' && <div className="request-stage">
         <RequestList
           requests={visibleRequests}
@@ -228,7 +240,7 @@ export function App() {
           onSearch={setSearch}
           onSelect={(id) => {
             setSelectedId(id)
-            setStage('request')
+            navigateToStage('request')
             setError('')
           }}
           onAdd={addRequest}
@@ -247,7 +259,7 @@ export function App() {
         loading={loading}
         error={error}
         onBack={() => {
-          setStage('request')
+          navigateToStage('request')
           setError('')
         }}
         onChange={changeSubtasks}
@@ -266,7 +278,7 @@ export function App() {
           }
         })}
         onBack={() => {
-          setStage('decomposition')
+          navigateToStage('decomposition')
           setError('')
         }}
         onPrepareEmail={(candidate, subtask) => {
@@ -275,7 +287,7 @@ export function App() {
           setSelectedFactIds(buildCandidateFacts(candidate).slice(0, 2).map((fact) => fact.id))
           setEmailDraft(null)
           setError('')
-          setStage('email')
+          navigateToStage('email')
         }}
       />}
       {selected && stage === 'email' && activeCandidate && activeEmailSubtask && <EmailPreparationStage
@@ -289,7 +301,7 @@ export function App() {
         onSelectFacts={setSelectedFactIds}
         onInstruction={setEmailInstruction}
         onBack={() => {
-          setStage('results')
+          navigateToStage('results')
           setError('')
         }}
         onCreateDraft={generateEmailDraft}
@@ -300,9 +312,10 @@ export function App() {
         facts={activeFacts.filter((fact) => selectedFactIds.includes(fact.id))}
         instruction={emailInstruction}
         draft={emailDraft}
-        onBackToResults={() => setStage('results')}
-        onBackToFacts={() => setStage('email')}
+        onBackToResults={() => navigateToStage('results')}
+        onBackToFacts={() => navigateToStage('email')}
       />}
+      </div>
     </div>
   </main>
 }
