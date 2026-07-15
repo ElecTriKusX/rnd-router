@@ -88,7 +88,7 @@ textarea:focus-visible {
   flex-direction: column;
   width: 230px;
   height: 100%;
-  padding: 24px 16px;
+  padding: 24px 16px 16px 16px;
   gap: 16px;
 }
 
@@ -206,21 +206,26 @@ textarea:focus-visible {
   font-size: 10px;
 }
 
+.sidebar__bottom {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+}
+
 .sidebar__collapse {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 100%;
-  min-height: 36px;
-  padding: 9px 12px;
   gap: 7px;
-  border: 1px solid var(--line);
+  border: none;
   border-radius: 8px;
   color: var(--muted);
-  background: #ffffff;
+  background: none;
   font-size: 11px;
   font-weight: 600;
   cursor: pointer;
+  width: auto;
 }
 
 .sidebar__collapse:hover {
@@ -274,23 +279,37 @@ textarea:focus-visible {
   background: #ffffff;
 }
 
-.sidebar__compact-profile {
+.sidebar__compact-bottom {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 10px;
+}
+
+.sidebar__compact-collapse {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
   padding: 0;
   border: 0;
+  border-radius: 8px;
   color: var(--muted);
   background: transparent;
   cursor: pointer;
 }
 
+.sidebar__compact-collapse:hover {
+  color: var(--brand);
+  background: #ffffff;
+}
+
 .sidebar__compact-avatar {
-  width: 32px;
-  height: 32px;
-  border: 1px solid #ffffff;
+  width: 28px;
+  height: 28px;
+  border: 0;
   border-radius: 50%;
   background: var(--brand-20);
 }
@@ -1729,7 +1748,7 @@ textarea:focus-visible {
   display: flex;
   flex-direction: column;
   padding-top: 10px;
-  gap: 7px;
+  gap: 1px;
   border-top: 1px solid var(--line);
 }
 
@@ -1739,7 +1758,7 @@ textarea:focus-visible {
   margin: 0;
   gap: 8px;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 11px;
   line-height: 1.45;
 }
 
@@ -1753,7 +1772,7 @@ textarea:focus-visible {
   border-radius: 6px;
   color: var(--brand);
   background: #ffffff;
-  font: 700 10px/1 'IBM Plex Mono', monospace;
+  font: 700 11px/1 'IBM Plex Mono', monospace;
 }
 
 .add-candidate {
@@ -2384,7 +2403,7 @@ textarea:focus-visible {
 .sidebar__profile,
 .sidebar__compact-logo,
 .sidebar__compact-navigation,
-.sidebar__compact-profile {
+.sidebar__compact-bottom {
   animation: sidebar-content-in 420ms var(--ease-out) both;
 }
 
@@ -2394,7 +2413,7 @@ textarea:focus-visible {
 }
 
 .sidebar__navigation,
-.sidebar__compact-profile {
+.sidebar__compact-bottom {
   animation-delay: 90ms;
 }
 

@@ -184,10 +184,9 @@ export function App() {
         status: 3,
         results: response.results,
       }))
-      const initialResult = response.results[1] ?? response.results[0]
       setSelectedCandidateIds((selection) => ({
         ...selection,
-        [selectedId]: initialResult?.candidates.slice(0, 2).map((candidate) => candidate.profile.id) ?? [],
+        [selectedId]: [],
       }))
       navigateToStage('results')
     } catch (reason) {
@@ -284,7 +283,7 @@ export function App() {
         onPrepareEmail={(candidate, subtask) => {
           setActiveCandidateId(candidate.profile.id)
           setActiveEmailSubtask(subtask)
-          setSelectedFactIds(buildCandidateFacts(candidate).slice(0, 2).map((fact) => fact.id))
+          setSelectedFactIds([])
           setEmailDraft(null)
           setError('')
           navigateToStage('email')

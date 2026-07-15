@@ -38,17 +38,21 @@ export function Sidebar() {
         ))}
       </nav>
       <div className="sidebar__spacer" />
-      <div className="sidebar__profile">
-        <span className="sidebar__avatar" />
-        <span className="sidebar__profile-copy">
-          <strong>Администратор</strong>
-          <small>Менеджер НИОКР</small>
-        </span>
+
+      {/* Новый контейнер для profile и collapse */}
+      <div className="sidebar__bottom">
+        <div className="sidebar__profile">
+          <span className="sidebar__avatar" />
+          <span className="sidebar__profile-copy">
+            <strong>Администратор</strong>
+            <small>Менеджер НИОКР</small>
+          </span>
+        </div>
+        <button className="sidebar__collapse" type="button" onClick={() => setCollapsed(true)}>
+          <PanelLeftClose size={16} />
+          <span>Свернуть</span>
+        </button>
       </div>
-      <button className="sidebar__collapse" type="button" onClick={() => setCollapsed(true)}>
-        <PanelLeftClose size={16} />
-        <span>Свернуть</span>
-      </button>
     </aside>
 
     <aside className={`sidebar sidebar--compact${collapsed ? ' is-visible' : ''}`} data-node-id="uDZr0" data-pencil-name="Сжатая боковая навигация">
@@ -66,10 +70,12 @@ export function Sidebar() {
         ))}
       </nav>
       <div className="sidebar__spacer" />
-      <button className="sidebar__compact-profile" type="button" aria-label="Развернуть боковую панель" onClick={() => setCollapsed(false)}>
+      <div className="sidebar__compact-bottom">
         <span className="sidebar__compact-avatar" />
-        <PanelLeftOpen size={14} />
-      </button>
+        <button className="sidebar__compact-collapse" type="button" aria-label="Развернуть боковую панель" onClick={() => setCollapsed(false)}>
+          <PanelLeftOpen size={16} />
+        </button>
+      </div>
     </aside>
   </>
 }

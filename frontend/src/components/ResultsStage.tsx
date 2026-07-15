@@ -141,15 +141,7 @@ export function ResultsStage({
                 <strong>{candidate.score.toFixed(2)}</strong>
                 <span>релевантность</span>
               </div>
-              <button
-                className="candidate-card__open"
-                type="button"
-                aria-label="Открыть карточку кандидата"
-                title="Открыть карточку кандидата"
-                onClick={() => onPrepareEmail(candidate, activeResult.subtask)}
-              >
-                <ChevronRight size={15} />
-              </button>
+
               <button
                 className="candidate-card__info"
                 type="button"
@@ -160,6 +152,17 @@ export function ResultsStage({
               >
                 <Info size={15} />
               </button>
+
+              <button
+                className="candidate-card__open"
+                type="button"
+                aria-label="Открыть карточку кандидата"
+                title="Открыть карточку кандидата"
+                onClick={() => onPrepareEmail(candidate, activeResult.subtask)}
+              >
+                <ChevronRight size={15} />
+              </button>
+
             </div>
             {expanded && <div className="candidate-card__reasons">
               {candidate.reasons.map((reason, index) => <p key={`${candidate.profile.id}-${index}`}>
