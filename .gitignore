@@ -39,8 +39,10 @@ Thumbs.db
 .coverage
 
 # Runtime data and frontend build output
+data/
 data/profiles.json
 data/index.parquet
 data/profiles_raw/
 frontend/node_modules/
 frontend/dist/
+frontend/tsconfig.tsbuildinfo

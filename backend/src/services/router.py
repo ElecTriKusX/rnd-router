@@ -2,12 +2,12 @@
 
 from collections.abc import Callable
 
-from domain.models import CandidateMatch, EmailDraft, MatchResponse, ResearchRequest, SubtaskMatches
+from domain.models import CandidateMatch, EmailDraft, MatchResponse, ResearchRequest, SubtaskMatches, DecomposeResponce
 from infrastructure.retrieval import VectorRetriever
 from infrastructure.yandex_llm import LLM
 from services.decomposition import decompose_request
 from services.email_drafting import draft_email
-from services.reranking import rerank_candidates
+from services.describe import describe_candidate
 
 
 class RNDService:
@@ -21,15 +21,47 @@ class RNDService:
         self._llm_factory = llm_factory
         self._retriever_factory = retriever_factory
 
-    def match(self, request: ResearchRequest, top_n: int) -> MatchResponse:
+    def decompose(self, request: ResearchRequest) -> DecomposeResponce:
+        """Разбивает входящий запрос на подзадачи."""
+        llm = self._llm_factory()
+        return DecomposeResponce(subtasks=decompose_request(llm, request))
+
+    def match(self, request: ResearchRequest, decompose: DecomposeResponce) -> MatchResponse:
         """Находит и объясняет кандидатов для каждой подзадачи входящего запроса."""
         llm = self._llm_factory()
         retriever = self._retriever_factory(llm)
         results: list[SubtaskMatches] = []
-        for subtask in decompose_request(llm, request):
-            profiles = retriever.retrieve(subtask.topic, k=20)
-            candidates = rerank_candidates(llm, subtask, profiles, top_n=top_n)
-            results.append(SubtaskMatches(subtask=subtask, candidates=candidates))
+
+        subtask_profiles = {}
+        all_profiles = {}
+        scores = {}
+
+        for subtask in decompose.subtasks:
+            profiles_and_scores = retriever.retrieve(f"{request.text} {subtask.topic}", k=10)
+            print(len(profiles_and_scores))
+            subtask_profiles[subtask.id] = []
+            for profile, score in profiles_and_scores:
+                subtask_profiles[subtask.id].append(profile)
+                if profile.id not in all_profiles:
+                    all_profiles[profile.id] = profile
+                    scores[profile.id] = score
+                if score > scores[profile.id]:
+                    scores[profile.id] = score
+
+        candidates = {}
+        for profile_id in all_profiles.keys():
+            profile = all_profiles[profile_id]
+            reasons = describe_candidate(llm, request, profile)
+            score = scores[profile.id]
+            candidates[profile.id] = CandidateMatch(profile=profile, score=score, reasons=reasons)
+        
+        for subtask in decompose.subtasks:
+            subtask_candidates = [candidates[profile.id] for profile in subtask_profiles[subtask.id]]
+
+            subtask_candidates.sort(key=lambda c: c.score, reverse=True)
+
+            results.append(SubtaskMatches(subtask=subtask, candidates=subtask_candidates))
+
         return MatchResponse(request=request, results=results)
 
     def create_email_draft(self, request: ResearchRequest, candidate: CandidateMatch) -> EmailDraft:
