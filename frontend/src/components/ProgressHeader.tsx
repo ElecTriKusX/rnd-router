@@ -32,7 +32,7 @@ export function ProgressHeader({ stage, availableStatus, onNavigate }: ProgressH
         const isCurrent = step.position === current
         const isAvailable = step.position <= availableStatus
         const isCompleted = isAvailable && !isCurrent
-        const canNavigate = isAvailable && !isCurrent
+        const canNavigate = isAvailable && step.stage !== stage
 
         return <div className="progress__group" key={step.stage}>
           {index > 0 && <span className={`progress__line${isAvailable ? ' is-completed' : ''}`} />}

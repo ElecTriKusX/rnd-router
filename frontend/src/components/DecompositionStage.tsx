@@ -2,6 +2,7 @@ import {
   ArrowLeft,
   ArrowRight,
   CircleAlert,
+  LoaderCircle,
   Pencil,
   Plus,
   Sparkles,
@@ -9,6 +10,7 @@ import {
   X,
 } from 'lucide-react'
 import { FormEvent, useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import type { RequestItem, Subtask } from '../types'
 
 type DecompositionStageProps = {
@@ -21,7 +23,7 @@ type DecompositionStageProps = {
 }
 
 type EditState = {
-  id: number
+  id: number | null
   topic: string
   keywords: string[]
 }
@@ -47,25 +49,24 @@ export function DecompositionStage({
   }
 
   const addSubtask = () => {
-    const subtask: Subtask = {
-      id: nextSubtaskId(request.subtasks),
-      topic: 'Новая подзадача',
-      keywords: [],
-    }
-    onChange([...request.subtasks, subtask])
-    openEditor(subtask)
+    setEditing({ id: null, topic: '', keywords: [] })
   }
 
   const saveEdit = () => {
     if (!editing?.topic.trim()) return
-    onChange(request.subtasks.map((subtask) => subtask.id === editing.id
-      ? {
-          ...subtask,
-          topic: editing.topic.trim(),
-          keywords: editing.keywords.map((keyword) => keyword.trim()).filter(Boolean),
-        }
-      : subtask))
+    const nextSubtask: Subtask = {
+      id: editing.id ?? nextSubtaskId(request.subtasks),
+      topic: editing.topic.trim(),
+      keywords: editing.keywords.map((keyword) => keyword.trim()).filter(Boolean),
+    }
+    onChange(editing.id === null
+      ? [...request.subtasks, nextSubtask]
+      : request.subtasks.map((subtask) => subtask.id === editing.id ? nextSubtask : subtask))
     setEditing(null)
+  }
+
+  const deleteSubtask = (id: number) => {
+    onChange(request.subtasks.filter((subtask) => subtask.id !== id))
   }
 
   const hasResults = request.status !== 'new' && request.status >= 3 && request.results.length > 0
@@ -126,7 +127,12 @@ export function DecompositionStage({
                     <Pencil size={12} />
                     Изменить
                   </button>
-                  <button className="subtask-card__delete" type="button" aria-label="Удалить подзадачу">
+                  <button
+                    className="subtask-card__delete"
+                    type="button"
+                    aria-label="Удалить подзадачу"
+                    onClick={() => deleteSubtask(subtask.id)}
+                  >
                     <Trash2 size={13} />
                   </button>
                 </div>
@@ -166,6 +172,7 @@ export function DecompositionStage({
           disabled={request.subtasks.length === 0 || loading}
           onClick={onContinue}
         >
+          {loading && <LoaderCircle className="button__spinner" size={14} />}
           {loading ? 'Идёт подбор…' : hasResults ? 'Далее' : 'Перейти к результатам'}
           {!loading && <ArrowRight size={14} />}
         </button>
@@ -200,7 +207,7 @@ function EditSubtaskModal({ value, onChange, onClose, onSave }: EditSubtaskModal
     setKeyword('')
   }
 
-  return <div className="modal-backdrop" role="presentation" onMouseDown={onClose}>
+  return createPortal(<div className="modal-backdrop" role="presentation" onMouseDown={onClose}>
     <section
       className="subtask-modal"
       role="dialog"
@@ -210,8 +217,8 @@ function EditSubtaskModal({ value, onChange, onClose, onSave }: EditSubtaskModal
     >
       <div className="subtask-modal__heading">
         <div>
-          <span>РЕДАКТИРОВАНИЕ ПОДЗАДАЧИ</span>
-          <h2 id="edit-subtask-title">Уточнить формулировку</h2>
+          <span>{value.id === null ? 'НОВАЯ ПОДЗАДАЧА' : 'РЕДАКТИРОВАНИЕ ПОДЗАДАЧИ'}</span>
+          <h2 id="edit-subtask-title">{value.id === null ? 'Добавить подзадачу' : 'Уточнить формулировку'}</h2>
         </div>
         <button type="button" aria-label="Закрыть" onClick={onClose}>
           <X size={17} />
@@ -223,6 +230,7 @@ function EditSubtaskModal({ value, onChange, onClose, onSave }: EditSubtaskModal
           className="subtask-modal__topic"
           value={value.topic}
           onChange={(event) => onChange({ ...value, topic: event.target.value })}
+          placeholder="Опишите подзадачу"
           autoFocus
         />
       </label>
@@ -258,5 +266,5 @@ function EditSubtaskModal({ value, onChange, onClose, onSave }: EditSubtaskModal
         </button>
       </div>
     </section>
-  </div>
+  </div>, document.body)
 }

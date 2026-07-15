@@ -88,7 +88,7 @@ textarea:focus-visible {
   flex-direction: column;
   width: 230px;
   height: 100%;
-  padding: 24px 16px 12px;
+  padding: 24px 16px;
   gap: 16px;
 }
 
@@ -206,6 +206,28 @@ textarea:focus-visible {
   font-size: 10px;
 }
 
+.sidebar__collapse {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 36px;
+  padding: 9px 12px;
+  gap: 7px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--muted);
+  background: #ffffff;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.sidebar__collapse:hover {
+  border-color: var(--brand-40);
+  color: var(--brand);
+}
+
 .sidebar--compact {
   display: none;
   flex-direction: column;
@@ -258,7 +280,11 @@ textarea:focus-visible {
   align-items: center;
   justify-content: center;
   gap: 12px;
+  padding: 0;
+  border: 0;
   color: var(--muted);
+  background: transparent;
+  cursor: pointer;
 }
 
 .sidebar__compact-avatar {
@@ -267,6 +293,14 @@ textarea:focus-visible {
   border: 1px solid #ffffff;
   border-radius: 50%;
   background: var(--brand-20);
+}
+
+.sidebar--expanded.is-collapsed {
+  display: none;
+}
+
+.sidebar--compact.is-visible {
+  display: flex;
 }
 
 .workspace {
@@ -1232,7 +1266,7 @@ textarea:focus-visible {
 
 .modal-backdrop {
   position: fixed;
-  z-index: 20;
+  z-index: 100;
   inset: 0;
   display: flex;
   align-items: center;
