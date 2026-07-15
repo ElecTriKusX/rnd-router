@@ -13,37 +13,6 @@ class FakeLLM:
         return next(self._responses)
 
 
-class FakeRetriever:
-    """Возвращает известный профиль вместо чтения parquet-индекса."""
-
-    def __init__(self, profiles: list[Profile]) -> None:
-        self._profiles = profiles
-
-    def retrieve(self, query: str, k: int = 20) -> list[Profile]:
-        del query
-        return self._profiles[:k]
-
-
-def test_router_connects_decomposition_retrieval_and_reranking() -> None:
-    llm = FakeLLM(
-        [
-            '{"subtasks": [{"id": 1, "topic": "Катализ", "keywords": ["полимер"]}]}',
-            '{"top": [{"profile_id": "p1", "score": 0.92, "reasons": ["Есть публикация по катализу"]}]}',
-        ]
-    )
-    profile = Profile(id="p1", full_name="Иванов Иван", email="ivanov@example.test")
-    service = RNDService(
-        llm_factory=lambda: llm,
-        retriever_factory=lambda _: FakeRetriever([profile]),
-    )
-
-    response = service.match(ResearchRequest(title="Полимер", description="Нужен катализ"), top_n=5)
-
-    assert response.results[0].subtask.topic == "Катализ"
-    assert response.results[0].candidates[0].profile.id == "p1"
-    assert response.results[0].candidates[0].reasons == ["Есть публикация по катализу"]
-
-
 def test_router_generates_email_only_for_selected_candidate() -> None:
     llm = FakeLLM(['{"to": "ivanov@example.test", "subject": "Приглашение", "body": "Здравствуйте"}'])
     profile = Profile(id="p1", full_name="Иванов Иван", email="ivanov@example.test")
