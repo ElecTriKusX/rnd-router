@@ -51,7 +51,7 @@ export function App() {
   const [activeCandidateId, setActiveCandidateId] = useState<string | null>(null)
   const [activeEmailSubtask, setActiveEmailSubtask] = useState<Subtask | null>(null)
   const [selectedFactIds, setSelectedFactIds] = useState<string[]>([])
-  const [emailInstruction, setEmailInstruction] = useState('Упомянуть возможность короткой онлайн-встречи и уточнить удобный формат связи.')
+  const [emailInstruction, setEmailInstruction] = useState('')
   const [emailDraft, setEmailDraft] = useState<EmailDraft | null>(null)
 
   const selected = requests.find((request) => request.id === selectedId) ?? requests[0]
@@ -297,6 +297,17 @@ export function App() {
         instruction={emailInstruction}
         loading={loading}
         error={error}
+        isParticipant={(selectedCandidateIds[selected.id] ?? []).includes(activeCandidate.profile.id)}
+        onToggleParticipant={() => setSelectedCandidateIds((selection) => {
+          const current = selection[selected.id] ?? []
+          const candidateId = activeCandidate.profile.id
+          return {
+            ...selection,
+            [selected.id]: current.includes(candidateId)
+              ? current.filter((id) => id !== candidateId)
+              : [...current, candidateId],
+          }
+        })}
         onSelectFacts={setSelectedFactIds}
         onInstruction={setEmailInstruction}
         onBack={() => {

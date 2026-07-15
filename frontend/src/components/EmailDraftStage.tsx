@@ -20,6 +20,8 @@ export function EmailDraftStage({
   onBackToResults,
   onBackToFacts,
 }: EmailDraftStageProps) {
+  const recipient = draft.to || candidate.profile.email
+
   return <div className="email-draft-stage">
     <aside className="draft-context" data-pencil-name="Основания письма">
       <h2>Факты, использованные в черновике</h2>
@@ -64,7 +66,15 @@ export function EmailDraftStage({
         <button type="button"><Pencil size={13} />Редактировать</button>
       </div>
       <div className="draft-letter__fields">
-        <div><span>Кому</span><strong>{candidate.profile.full_name} &lt;{draft.to || candidate.profile.email || 'email не указан'}&gt;</strong></div>
+        <div>
+          <span>Кому</span>
+          <strong>
+            {candidate.profile.full_name}{' '}
+            {recipient
+              ? <>&lt;{recipient}&gt;</>
+              : <span className="email-missing">&lt;Отсутствует почта сотрудника&gt;</span>}
+          </strong>
+        </div>
         <div><span>Тема</span><strong>{draft.subject}</strong></div>
       </div>
       <div className="draft-letter__body">{draft.body}</div>

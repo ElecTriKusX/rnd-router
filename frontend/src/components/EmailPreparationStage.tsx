@@ -1,4 +1,4 @@
-import { ArrowLeft, Check, Info, LoaderCircle, WandSparkles } from 'lucide-react'
+import { ArrowLeft, Check, ExternalLink, Info, LoaderCircle, WandSparkles } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import type { Candidate, RequestItem, Subtask } from '../types'
 
@@ -39,6 +39,8 @@ type EmailPreparationStageProps = {
   instruction: string
   loading: boolean
   error: string
+  isParticipant: boolean
+  onToggleParticipant: () => void
   onSelectFacts: (ids: string[]) => void
   onInstruction: (value: string) => void
   onBack: () => void
@@ -55,6 +57,8 @@ export function EmailPreparationStage({
   instruction,
   loading,
   error,
+  isParticipant,
+  onToggleParticipant,
   onSelectFacts,
   onInstruction,
   onBack,
@@ -81,7 +85,12 @@ export function EmailPreparationStage({
         <span>ПОДЗАДАЧА {String(Math.max(0, subtaskIndex) + 1).padStart(2, '0')}</span>
         <strong>{subtask.topic}</strong>
         <div className="recommendation-context__score">
-          <span>РЕЛЕВАНТНОСТЬ <Info size={13} /></span>
+          <span className="relevance-tooltip" tabIndex={0}>
+            РЕЛЕВАНТНОСТЬ <Info size={13} />
+            <span className="relevance-tooltip__content" role="tooltip">
+              Оценка от 0 до 1 показывает семантическое совпадение задачи с профилем исследователя. Сервер сравнивает вектор задачи с векторами профилей, сформированными из должности, подразделения, публикаций и грантов, затем нормализует результат среди найденных кандидатов. Чем выше значение, тем ближе профиль к задаче.
+            </span>
+          </span>
           <strong>{candidate.score.toFixed(2)}</strong>
         </div>
       </div>
@@ -147,7 +156,7 @@ export function EmailPreparationStage({
                 <small>{fact.meta}</small>
                 <strong>{fact.title}</strong>
               </span>
-              <span className="fact-card__source">↗</span>
+              <ExternalLink className="fact-card__source" data-node-id="fxFIz" size={15} strokeWidth={2} aria-hidden="true" />
             </button>
           </div>
         })}
@@ -159,15 +168,24 @@ export function EmailPreparationStage({
         <textarea
           value={instruction}
           onChange={(event) => onInstruction(event.target.value)}
-          placeholder="Например: предложить короткую онлайн-встречу"
+          placeholder="Например: предложите короткую онлайн-встречу и уточните удобный формат связи"
         />
       </label>
 
       {error && <div className="email-preparation-error" role="alert">{error}</div>}
       <div className="email-preparation-actions">
-        <div className="project-participant">
+        <div className={`project-participant${isParticipant ? ' is-selected' : ''}`}>
           <span>Участник входит в проект</span>
-          <span className="toggle-on"><span /></span>
+          <button
+            className={`toggle-on${isParticipant ? ' is-on' : ''}`}
+            type="button"
+            role="switch"
+            aria-checked={isParticipant}
+            aria-label={isParticipant ? 'Исключить кандидата из проекта' : 'Включить кандидата в проект'}
+            onClick={onToggleParticipant}
+          >
+            <span />
+          </button>
         </div>
         <button
           className="button button--primary email-preparation-actions__create"

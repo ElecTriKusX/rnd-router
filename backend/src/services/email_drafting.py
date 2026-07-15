@@ -26,9 +26,6 @@ def draft_email(
 ) -> EmailDraft:
     """Генерирует письмо для одного выбранного кандидата, а не для всего списка."""
     profile = candidate.profile
-    if not profile.email:
-        raise EmailDraftingError("У выбранного исследователя отсутствует email")
-
     candidate_info = (
         f"ФИО: {profile.full_name}\n"
         f"Подразделение: {profile.unit}\n"
@@ -38,15 +35,20 @@ def draft_email(
     prompt = read_prompt(f"draft_email_v{prompt_version}")
     prompt = prompt.replace("{grant_description}", request.text)
     prompt = prompt.replace("{candidate_info}", candidate_info)
-    prompt = prompt.replace("{candidate_email}", profile.email)
+    prompt = prompt.replace("{candidate_email}", profile.email or "не указан")
     prompt = prompt.replace("{reasons}", "\n".join(f"- {reason}" for reason in candidate.reasons))
+    if not profile.email:
+        prompt += (
+            "\n\nВажное уточнение: email кандидата отсутствует. Всё равно подготовь текст письма, "
+            "а в поле \"to\" верни null."
+        )
 
     for _ in range(2):
         try:
             draft = EmailDraft.model_validate(parse_json_object(llm.chat(prompt)))
-            if draft.to != profile.email:
+            if profile.email and draft.to != profile.email:
                 raise EmailDraftingError("LLM вернула email, не совпадающий с профилем")
-            return draft
+            return draft if profile.email else draft.model_copy(update={"to": None})
         except (LLMResponseError, ValidationError):
             continue
     raise EmailDraftingError("Не удалось получить валидный черновик письма")

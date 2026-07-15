@@ -240,7 +240,7 @@ textarea:focus-visible {
   width: 60px;
   height: 100%;
   padding: 18px 8px 12px;
-  gap: 16px;
+  gap: 20px;
 }
 
 .sidebar__compact-logo {
@@ -901,6 +901,7 @@ textarea:focus-visible {
   background: transparent;
 }
 
+.subtask-card__delete:hover,
 .tag-input__cancel:hover {
   color: #bb2533;
   background: #fff2f3;
@@ -1881,6 +1882,37 @@ textarea:focus-visible {
   letter-spacing: .25px;
 }
 
+.relevance-tooltip {
+  position: relative;
+  cursor: help;
+}
+
+.relevance-tooltip__content {
+  position: absolute;
+  z-index: 5;
+  bottom: calc(100% + 9px);
+  left: 0;
+  width: 276px;
+  padding: 10px 11px;
+  border: 1px solid var(--brand-20);
+  border-radius: 7px;
+  color: var(--ink);
+  background: #ffffff;
+  box-shadow: 0 12px 28px rgb(22 33 43 / 16%);
+  font: 400 10px/1.4 Inter, sans-serif;
+  letter-spacing: normal;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(4px);
+  transition: opacity var(--transition-fast) ease, transform var(--transition-fast) ease;
+}
+
+.relevance-tooltip:hover .relevance-tooltip__content,
+.relevance-tooltip:focus .relevance-tooltip__content {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 .recommendation-context__score strong {
   color: var(--brand);
   font: 700 14px/1.2 'IBM Plex Mono', monospace;
@@ -2120,9 +2152,10 @@ textarea:focus-visible {
 }
 
 .fact-card__source {
+  display: flex;
+  flex: 0 0 auto;
+  margin-right: 4px;
   color: var(--brand);
-  font-size: 15px;
-  font-weight: 600;
 }
 
 .facts-catalog__empty {
@@ -2161,6 +2194,10 @@ textarea:focus-visible {
   border-color: var(--brand);
 }
 
+.email-instruction textarea:focus::placeholder {
+  color: transparent;
+}
+
 .email-preparation-error {
   overflow: hidden;
   color: #bb2533;
@@ -2189,6 +2226,11 @@ textarea:focus-visible {
   font-weight: 600;
 }
 
+.project-participant:not(.is-selected) {
+  border-color: var(--line);
+  background: var(--surface-soft);
+}
+
 .toggle-on {
   display: flex;
   align-items: center;
@@ -2196,8 +2238,10 @@ textarea:focus-visible {
   width: 34px;
   height: 20px;
   padding: 3px;
+  border: 0;
   border-radius: 10px;
-  background: var(--brand);
+  background: var(--muted);
+  cursor: pointer;
 }
 
 .toggle-on span {
@@ -2205,6 +2249,16 @@ textarea:focus-visible {
   height: 14px;
   border-radius: 50%;
   background: #ffffff;
+  transform: translateX(0);
+  transition: transform var(--transition-base) var(--ease-out);
+}
+
+.toggle-on.is-on {
+  background: var(--brand);
+}
+
+.toggle-on.is-on span {
+  transform: translateX(14px);
 }
 
 .email-preparation-actions__create {
@@ -2365,6 +2419,14 @@ textarea:focus-visible {
   font-weight: 400;
 }
 
+.email-missing {
+  display: inline-flex;
+  padding: 3px 6px;
+  border-radius: 5px;
+  color: #bb2533;
+  background: #fff2f3;
+}
+
 .draft-letter__body {
   flex: 1;
   min-height: 0;
@@ -2446,8 +2508,7 @@ textarea:focus-visible {
 
 .candidate-card__checkbox:hover,
 .candidate-card__open:hover,
-.candidate-card__info:hover,
-.subtask-card__delete:hover {
+.candidate-card__info:hover {
   border-color: var(--brand);
   color: var(--brand);
 }

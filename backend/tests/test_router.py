@@ -25,3 +25,18 @@ def test_router_generates_email_only_for_selected_candidate() -> None:
     )
 
     assert draft.subject == "Приглашение"
+
+
+def test_router_generates_draft_without_candidate_email() -> None:
+    llm = FakeLLM(['{"to": null, "subject": "Приглашение", "body": "Здравствуйте"}'])
+    profile = Profile(id="p1", full_name="Иванов Иван")
+    service = RNDService(llm_factory=lambda: llm)
+    request = ResearchRequest(title="Полимер", description="Нужен катализ")
+
+    draft = service.create_email_draft(
+        request,
+        CandidateMatch(profile=profile, score=0.92, reasons=["Есть публикация"]),
+    )
+
+    assert draft.to is None
+    assert draft.subject == "Приглашение"
