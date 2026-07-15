@@ -1899,7 +1899,7 @@ textarea:focus-visible {
   color: var(--ink);
   background: #ffffff;
   box-shadow: 0 12px 28px rgb(22 33 43 / 16%);
-  font: 400 10px/1.4 Inter, sans-serif;
+  font: 400 11px/1.4 Inter, sans-serif;
   letter-spacing: normal;
   opacity: 0;
   pointer-events: none;
@@ -2234,7 +2234,7 @@ textarea:focus-visible {
 .toggle-on {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: flex-start;
   width: 34px;
   height: 20px;
   padding: 3px;
@@ -2317,10 +2317,10 @@ textarea:focus-visible {
   font: 400 9px/1.2 'IBM Plex Mono', monospace;
 }
 
-.draft-fact > div span:last-child {
+.draft-fact__source {
+  flex: 0 0 auto;
+  margin-right: 3px;
   color: var(--brand);
-  font-size: 14px;
-  font-weight: 600;
 }
 
 .draft-fact > strong {
@@ -2409,7 +2409,7 @@ textarea:focus-visible {
 
 .draft-letter__fields span {
   flex: 0 0 40px;
-  width: 40px;
+  width: auto;
   color: var(--muted);
   font: 400 10px/1.2 'IBM Plex Mono', monospace;
 }

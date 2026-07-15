@@ -39,6 +39,20 @@ function workflowStagePosition(stage: WorkflowStage) {
   return ({ request: 0, decomposition: 1, results: 2, email: 3, draft: 4 } as const)[stage]
 }
 
+type SavedEmailDraft = {
+  draft: EmailDraft
+  factIds: string[]
+  instruction: string
+}
+
+function emailDraftKey(requestId: string, candidateId: string, subtaskId: number) {
+  return `${requestId}:${subtaskId}:${candidateId}`
+}
+
+function sameFactSelection(left: string[], right: string[]) {
+  return left.length === right.length && left.every((id) => right.includes(id))
+}
+
 export function App() {
   const [requests, setRequests] = useState<RequestItem[]>(initialRequests)
   const [selectedId, setSelectedId] = useState(initialRequests[0].id)
@@ -53,6 +67,7 @@ export function App() {
   const [selectedFactIds, setSelectedFactIds] = useState<string[]>([])
   const [emailInstruction, setEmailInstruction] = useState('')
   const [emailDraft, setEmailDraft] = useState<EmailDraft | null>(null)
+  const [savedEmailDrafts, setSavedEmailDrafts] = useState<Record<string, SavedEmailDraft>>({})
 
   const selected = requests.find((request) => request.id === selectedId) ?? requests[0]
   const visibleRequests = useMemo(() => {
@@ -111,6 +126,7 @@ export function App() {
       setActiveCandidateId(null)
       setActiveEmailSubtask(null)
       setEmailDraft(null)
+      setSavedEmailDrafts({})
     }
     navigateToStage('request')
     setError('')
@@ -162,6 +178,7 @@ export function App() {
     setActiveCandidateId(null)
     setActiveEmailSubtask(null)
     setEmailDraft(null)
+    setSavedEmailDrafts({})
     setError('')
   }
 
@@ -201,9 +218,19 @@ export function App() {
     .flatMap((result) => result.candidates)
     .find((candidate) => candidate.profile.id === activeCandidateId)
   const activeFacts = activeCandidate ? buildCandidateFacts(activeCandidate) : []
+  const activeDraftKey = selected && activeCandidate && activeEmailSubtask
+    ? emailDraftKey(selected.id, activeCandidate.profile.id, activeEmailSubtask.id)
+    : null
+  const savedEmailDraft = activeDraftKey ? savedEmailDrafts[activeDraftKey] : undefined
+  const canContinueDraft = Boolean(
+    savedEmailDraft
+    && emailDraft
+    && sameFactSelection(savedEmailDraft.factIds, selectedFactIds)
+    && savedEmailDraft.instruction === emailInstruction,
+  )
 
   const generateEmailDraft = async (facts: ReturnType<typeof buildCandidateFacts>) => {
-    if (!selected || !activeCandidate) return
+    if (!selected || !activeCandidate || !activeEmailSubtask) return
     setLoading(true)
     setError('')
     try {
@@ -214,6 +241,14 @@ export function App() {
         emailInstruction,
       )
       setEmailDraft(draft)
+      setSavedEmailDrafts((drafts) => ({
+        ...drafts,
+        [emailDraftKey(selected.id, activeCandidate.profile.id, activeEmailSubtask.id)]: {
+          draft,
+          factIds: [...selectedFactIds],
+          instruction: emailInstruction,
+        },
+      }))
       navigateToStage('draft')
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Не удалось создать черновик письма')
@@ -281,10 +316,12 @@ export function App() {
           setError('')
         }}
         onPrepareEmail={(candidate, subtask) => {
+          const savedDraft = savedEmailDrafts[emailDraftKey(selected.id, candidate.profile.id, subtask.id)]
           setActiveCandidateId(candidate.profile.id)
           setActiveEmailSubtask(subtask)
-          setSelectedFactIds([])
-          setEmailDraft(null)
+          setSelectedFactIds(savedDraft?.factIds ?? [])
+          setEmailInstruction(savedDraft?.instruction ?? '')
+          setEmailDraft(savedDraft?.draft ?? null)
           setError('')
           navigateToStage('email')
         }}
@@ -315,6 +352,8 @@ export function App() {
           setError('')
         }}
         onCreateDraft={generateEmailDraft}
+        canContinueDraft={canContinueDraft}
+        onContinueDraft={() => canContinueDraft && navigateToStage('draft')}
       />}
       {selected && stage === 'draft' && activeCandidate && activeEmailSubtask && emailDraft && <EmailDraftStage
         candidate={activeCandidate}

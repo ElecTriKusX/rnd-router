@@ -2,9 +2,11 @@ import { ArrowLeft, Check, ExternalLink, Info, LoaderCircle, WandSparkles } from
 import { useMemo, useState } from 'react'
 import type { Candidate, RequestItem, Subtask } from '../types'
 
+export const LLM_REASONS_CATEGORY = 'Обоснования рекомендации от LLM'
+
 export type CandidateFact = {
   id: string
-  category: 'Гранты' | 'Исследования' | 'Статьи'
+  category: 'Гранты' | typeof LLM_REASONS_CATEGORY | 'Статьи'
   meta: string
   title: string
 }
@@ -18,7 +20,7 @@ export function buildCandidateFacts(candidate: Candidate): CandidateFact[] {
   }))
   const research: CandidateFact[] = candidate.reasons.map((reason, index) => ({
     id: `reason-${index}`,
-    category: 'Исследования',
+    category: LLM_REASONS_CATEGORY,
     meta: 'Обоснование рекомендации',
     title: reason,
   }))
@@ -45,9 +47,11 @@ type EmailPreparationStageProps = {
   onInstruction: (value: string) => void
   onBack: () => void
   onCreateDraft: (facts: CandidateFact[]) => void
+  canContinueDraft: boolean
+  onContinueDraft: () => void
 }
 
-const categories = ['Все', 'Гранты', 'Исследования', 'Статьи'] as const
+const categories = ['Все', 'Гранты', LLM_REASONS_CATEGORY, 'Статьи'] as const
 
 export function EmailPreparationStage({
   request,
@@ -63,6 +67,8 @@ export function EmailPreparationStage({
   onInstruction,
   onBack,
   onCreateDraft,
+  canContinueDraft,
+  onContinueDraft,
 }: EmailPreparationStageProps) {
   const [category, setCategory] = useState<(typeof categories)[number]>('Все')
   const facts = useMemo(() => buildCandidateFacts(candidate), [candidate])
@@ -156,7 +162,7 @@ export function EmailPreparationStage({
                 <small>{fact.meta}</small>
                 <strong>{fact.title}</strong>
               </span>
-              <ExternalLink className="fact-card__source" data-node-id="fxFIz" size={15} strokeWidth={2} aria-hidden="true" />
+              {fact.category !== LLM_REASONS_CATEGORY && <ExternalLink className="fact-card__source" data-node-id="fxFIz" size={15} strokeWidth={2} aria-hidden="true" />}
             </button>
           </div>
         })}
@@ -191,11 +197,17 @@ export function EmailPreparationStage({
           className="button button--primary email-preparation-actions__create"
           type="button"
           disabled={selectedFactIds.length === 0 || loading}
-          onClick={() => onCreateDraft(facts.filter((fact) => selectedFactIds.includes(fact.id)))}
+          onClick={() => canContinueDraft
+            ? onContinueDraft()
+            : onCreateDraft(facts.filter((fact) => selectedFactIds.includes(fact.id)))}
         >
           {loading && <LoaderCircle className="button__spinner" size={14} />}
           <WandSparkles size={14} />
-          {loading ? 'Создаём черновик…' : 'Создать черновик письма'}
+          {loading
+            ? 'Создаём черновик…'
+            : canContinueDraft
+              ? 'Продолжить редактирование письма'
+              : 'Создать черновик письма'}
         </button>
       </div>
     </section>

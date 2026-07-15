@@ -1,6 +1,6 @@
-import { ArrowLeft, Copy, Pencil, Send, SlidersHorizontal } from 'lucide-react'
+import { ArrowLeft, Copy, ExternalLink, Pencil, Send, SlidersHorizontal } from 'lucide-react'
 import type { Candidate, EmailDraft, Subtask } from '../types'
-import type { CandidateFact } from './EmailPreparationStage'
+import { LLM_REASONS_CATEGORY, type CandidateFact } from './EmailPreparationStage'
 
 type EmailDraftStageProps = {
   candidate: Candidate
@@ -28,7 +28,10 @@ export function EmailDraftStage({
       <strong className="draft-context__candidate">{candidate.profile.full_name}</strong>
       <div className="draft-context__facts">
         {facts.map((fact) => <div className="draft-fact" key={fact.id}>
-          <div><span>{fact.meta}</span><span>↗</span></div>
+          <div>
+            <span>{fact.meta}</span>
+            {fact.category !== LLM_REASONS_CATEGORY && <ExternalLink className="draft-fact__source" data-node-id="s4fMS" size={14} strokeWidth={2} aria-hidden="true" />}
+          </div>
           <strong>{fact.title}</strong>
         </div>)}
       </div>
