@@ -1,67 +1,159 @@
-import { MouseEvent, useEffect, useRef, useState } from 'react'
-import utmnLogo from './assets/utmn-logo-rus.png'
+import { useMemo, useState } from 'react'
+import { decompose } from './api'
+import { ProgressHeader } from './components/ProgressHeader'
+import { RequestEditor } from './components/RequestEditor'
+import { RequestList } from './components/RequestList'
+import { Sidebar } from './components/Sidebar'
+import { initialRequests } from './initialRequests'
+import type { RequestItem, WorkflowStage } from './types'
 
-type Stage = 1 | 2 | 3 | 4 | 5
-
-function extractBody(document: string) {
-  return document.match(/<body[^>]*>([\s\S]*)<\/body>/i)?.[1] ?? document
+function createRequestId(existing: RequestItem[]) {
+  const ids = new Set(existing.map((request) => request.id))
+  let id = ''
+  do {
+    const value = Math.floor(10000 + Math.random() * 90000)
+    id = `CRM-${value}`
+  } while (ids.has(id))
+  return id
 }
 
-function readStage(): Stage {
-  const value = Number(window.location.hash.replace('#stage-', ''))
-  return value >= 1 && value <= 5 ? value as Stage : 1
+function snapshot(request: RequestItem) {
+  return {
+    title: request.title,
+    description: request.description,
+    tags: [...request.tags],
+  }
+}
+
+function changedSinceSave(request: RequestItem) {
+  if (!request.saved) return true
+  return request.title !== request.saved.title
+    || request.description !== request.saved.description
+    || request.tags.join('\u0000') !== request.saved.tags.join('\u0000')
 }
 
 export function App() {
-  const [stage, setStage] = useState<Stage>(readStage)
-  const [markup, setMarkup] = useState('')
-  const pageRef = useRef<HTMLDivElement>(null)
+  const [requests, setRequests] = useState<RequestItem[]>(initialRequests)
+  const [selectedId, setSelectedId] = useState(initialRequests[0].id)
+  const [search, setSearch] = useState('')
+  const [stage, setStage] = useState<WorkflowStage>('request')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
-  const navigate = (nextStage: Stage) => {
-    if (nextStage === stage) return
-    window.location.hash = `stage-${nextStage}`
-    setStage(nextStage)
+  const selected = requests.find((request) => request.id === selectedId) ?? requests[0]
+  const visibleRequests = useMemo(() => {
+    const query = search.trim().toLocaleLowerCase('ru')
+    return query
+      ? requests.filter((request) => request.title.toLocaleLowerCase('ru').includes(query))
+      : requests
+  }, [requests, search])
+
+  const updateSelected = (updater: (request: RequestItem) => RequestItem) => {
+    setRequests((items) => items.map((request) => request.id === selectedId ? updater(request) : request))
   }
 
-  useEffect(() => {
-    const onHashChange = () => setStage(readStage())
-    window.addEventListener('hashchange', onHashChange)
-    return () => window.removeEventListener('hashchange', onHashChange)
-  }, [])
+  const addRequest = () => {
+    const id = createRequestId(requests)
+    const next: RequestItem = {
+      id,
+      title: 'Новая заявка',
+      company: 'Заказчик не указан',
+      tags: [],
+      description: '',
+      status: 'new',
+      saved: null,
+      subtasks: [],
+      results: [],
+    }
+    setRequests((items) => [next, ...items])
+    setSelectedId(id)
+    setSearch('')
+    setStage('request')
+    setError('')
+  }
 
-  useEffect(() => {
-    const controller = new AbortController()
-    setMarkup('')
-    fetch(`${import.meta.env.BASE_URL}pencil/RND${stage}.html`, { signal: controller.signal })
-      .then((response) => response.ok ? response.text() : Promise.reject(new Error(`Не удалось загрузить экран ${stage}`)))
-      .then((document) => setMarkup(extractBody(document)))
-      .catch((error: unknown) => { if (!(error instanceof DOMException && error.name === 'AbortError')) throw error })
-    return () => controller.abort()
-  }, [stage])
+  const saveRequest = () => {
+    updateSelected((request) => {
+      const invalidatesLaterStages = changedSinceSave(request) && request.status !== 'new' && request.status > 1
+      return {
+        ...request,
+        status: 1,
+        saved: snapshot(request),
+        subtasks: invalidatesLaterStages ? [] : request.subtasks,
+        results: invalidatesLaterStages ? [] : request.results,
+      }
+    })
+    setStage('request')
+    setError('')
+  }
 
-  useEffect(() => {
-    const logo = pageRef.current?.querySelector<HTMLElement>('[data-pencil-name="Логотип ТюмГУ"]')
-    if (logo) logo.style.backgroundImage = `url("${utmnLogo}")`
-  }, [markup])
-
-  const handleClick = (event: MouseEvent<HTMLDivElement>) => {
-    let current = event.target instanceof HTMLElement ? event.target : null
-    const names: string[] = []
-    while (current && current !== pageRef.current) {
-      const name = current.dataset.pencilName
-      if (name) names.push(name)
-      current = current.parentElement
+  const continueFromRequest = async () => {
+    if (!selected) return
+    if (selected.status !== 'new' && selected.status >= 2 && selected.subtasks.length > 0) {
+      setStage('decomposition')
+      return
     }
 
-    if (names.some((name) => name === 'Перейти к декомпозиции')) navigate(2)
-    else if (names.some((name) => name === 'Перейти к результатам')) navigate(3)
-    else if (names.some((name) => name === 'Разослать письма')) navigate(4)
-    else if (names.some((name) => name === 'Создать черновик')) navigate(5)
-    else if (names.some((name) => name === 'Изменить факты')) navigate(4)
-    else if (names.some((name) => name === 'Вернуться к заявке')) navigate(stage === 2 ? 1 : stage === 3 ? 2 : stage === 4 ? 3 : 4)
+    setLoading(true)
+    setError('')
+    try {
+      const response = await decompose({
+        title: selected.title.trim(),
+        description: selected.description.trim(),
+      })
+      updateSelected((request) => ({
+        ...request,
+        title: request.title.trim(),
+        description: request.description.trim(),
+        status: 2,
+        saved: {
+          title: request.title.trim(),
+          description: request.description.trim(),
+          tags: [...request.tags],
+        },
+        subtasks: response.subtasks,
+        results: [],
+      }))
+      setStage('decomposition')
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Не удалось выполнить декомпозицию')
+    } finally {
+      setLoading(false)
+    }
   }
 
-  return <main className="pencil-stage" onClick={handleClick}>
-    <div ref={pageRef} className="pencil-canvas" dangerouslySetInnerHTML={{ __html: markup }} />
+  const availableStatus = selected?.status === 'new' ? 1 : selected?.status ?? 1
+
+  return <main className="app-shell">
+    <Sidebar />
+    <div className="workspace">
+      <ProgressHeader
+        stage={stage}
+        availableStatus={availableStatus}
+        onNavigate={setStage}
+      />
+      {selected && <div className="request-stage">
+        <RequestList
+          requests={visibleRequests}
+          selectedId={selectedId}
+          search={search}
+          onSearch={setSearch}
+          onSelect={(id) => {
+            setSelectedId(id)
+            setStage('request')
+            setError('')
+          }}
+          onAdd={addRequest}
+        />
+        <RequestEditor
+          request={selected}
+          loading={loading}
+          error={error}
+          onChange={(updates) => updateSelected((request) => ({ ...request, ...updates }))}
+          onSave={saveRequest}
+          onContinue={continueFromRequest}
+        />
+      </div>}
+    </div>
   </main>
 }

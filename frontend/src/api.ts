@@ -1,24 +1,9 @@
-export type Subtask = { id: number; topic: string; keywords: string[] }
+import type { Candidate, EmailDraft, MatchResult, Subtask } from './types'
 
-export type Candidate = {
-  profile: {
-    id: string
-    full_name: string
-    unit: string
-    position?: string | null
-    degree?: string | null
-    email?: string | null
-    publications?: { title: string; year?: number | null }[]
-    grants?: { title: string; years?: string | null }[]
-  }
-  score: number
-  reasons: string[]
+type RequestPayload = {
+  title: string
+  description: string
 }
-
-export type MatchResult = { subtask: Subtask; candidates: Candidate[] }
-export type EmailDraft = { to?: string | null; subject: string; body: string }
-
-type RequestPayload = { title: string; description: string }
 
 async function post<T>(path: string, payload: unknown): Promise<T> {
   const response = await fetch(path, {
@@ -26,10 +11,21 @@ async function post<T>(path: string, payload: unknown): Promise<T> {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   })
+
   if (!response.ok) {
-    const message = await response.text()
+    const body = await response.text()
+    let message = body
+    try {
+      const parsed = JSON.parse(body) as { detail?: string | Array<{ msg?: string }> }
+      message = typeof parsed.detail === 'string'
+        ? parsed.detail
+        : parsed.detail?.map((item) => item.msg).filter(Boolean).join(', ') || body
+    } catch {
+      // The plain response body is already the most useful error message.
+    }
     throw new Error(message || `Ошибка API: ${response.status}`)
   }
+
   return response.json() as Promise<T>
 }
 
@@ -38,12 +34,22 @@ export function decompose(request: RequestPayload) {
 }
 
 export function findMatches(request: RequestPayload, subtasks: Subtask[]) {
-  return post<{ results: MatchResult[] }>('/api/v1/matches', {
+  return post<{ request: RequestPayload; results: MatchResult[] }>('/api/v1/matches', {
     request,
     decompose: { subtasks },
   })
 }
 
-export function createEmailDraft(request: RequestPayload, candidate: Candidate, facts: string[], instruction: string) {
-  return post<EmailDraft>('/api/v1/email-drafts', { request, candidate, facts, instruction })
+export function createEmailDraft(
+  request: RequestPayload,
+  candidate: Candidate,
+  facts: string[],
+  instruction: string,
+) {
+  return post<EmailDraft>('/api/v1/email-drafts', {
+    request,
+    candidate,
+    facts,
+    instruction,
+  })
 }
