@@ -3,15 +3,18 @@
 from fastapi import Depends, FastAPI, HTTPException, status
 from pydantic import BaseModel, Field
 
-from domain.models import CandidateMatch, EmailDraft, MatchResponse, ResearchRequest
+from domain.models import CandidateMatch, EmailDraft, MatchResponse, ResearchRequest, DecomposeResponce
 from services.router import RNDService
 from services.ports import RouterService
 
 
 class MatchCommand(BaseModel):
     request: ResearchRequest
-    top_n: int = Field(default=5, ge=1, le=20)
+    decompose: DecomposeResponce
 
+
+class DecomposeCommand(BaseModel):
+    request: ResearchRequest
 
 class EmailDraftCommand(BaseModel):
     request: ResearchRequest
@@ -35,6 +38,23 @@ def create_app() -> FastAPI:
         return {"status": "ok"}
 
     @app.post(
+        "/api/v1/decompose",
+        response_model=DecomposeResponce,
+        status_code=status.HTTP_200_OK,
+    )
+    def decompose_grant(
+        command: DecomposeCommand,
+        service: RouterService = Depends(get_router_service),
+    ) -> DecomposeResponce:
+        try:
+            return service.decompose(command.request)
+        except (RuntimeError, EnvironmentError, FileNotFoundError, ValueError) as error:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail=str(error),
+            ) from error
+
+    @app.post(
         "/api/v1/matches",
         response_model=MatchResponse,
         status_code=status.HTTP_200_OK,
@@ -44,7 +64,7 @@ def create_app() -> FastAPI:
         service: RouterService = Depends(get_router_service),
     ) -> MatchResponse:
         try:
-            return service.match(command.request, command.top_n)
+            return service.match(command.request, command.decompose)
         except (RuntimeError, EnvironmentError, FileNotFoundError, ValueError) as error:
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,

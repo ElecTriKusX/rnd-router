@@ -33,7 +33,7 @@ class VectorRetriever:
         self._profiles_path = profiles_path
         self._index_path = index_path
 
-    def retrieve(self, query: str, k: int = 20) -> list[Profile]:
+    def retrieve(self, query: str, k: int = 20) -> list[tuple[Profile, float]]:
         """Возвращает не более k профилей, наиболее близких к запросу."""
         if not query.strip():
             raise ValueError("Поисковый запрос не может быть пустым")
@@ -61,5 +61,6 @@ class VectorRetriever:
 
         scores = (vectors / vector_norms[:, None]) @ (query_vector / query_norm)
         order = np.argsort(-scores, kind="stable")[: min(k, len(ids))]
+        
         profiles = load_profiles(self._profiles_path)
-        return [profiles[ids[row]] for row in order]
+        return [(profiles[ids[idx]], scores[idx]) for idx in order]

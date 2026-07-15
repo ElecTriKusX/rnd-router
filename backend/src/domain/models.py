@@ -51,12 +51,16 @@ class Subtask(BaseModel):
     keywords: list[str] = Field(default_factory=list)
 
 
+class DecomposeResponce(BaseModel):
+    subtasks: list[Subtask]
+
+
 class CandidateMatch(BaseModel):
     """Профиль и объяснение того, почему он подходит для конкретной подзадачи."""
 
     profile: Profile
     score: float = Field(ge=0, le=1)
-    reasons: list[str] = Field(min_length=1)
+    reasons: list[str] = Field(min_length=0)
 
 
 class SubtaskMatches(BaseModel):
