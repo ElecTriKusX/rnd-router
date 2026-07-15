@@ -5,6 +5,8 @@ import {
   Settings2, SlidersHorizontal, Sparkles, UsersRound, X,
 } from 'lucide-react'
 import { Candidate, createEmailDraft, decompose, EmailDraft, findMatches, MatchResult, Subtask } from './api'
+import utmnLogo from './assets/utmn-logo-rus.png'
+import utmnLogoMini from './assets/utmn-logo-mini-rus.png'
 
 type Screen = 'request' | 'decomposition' | 'results' | 'compose' | 'draft'
 type RequestItem = {
@@ -189,7 +191,7 @@ export function App() {
 function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) {
   const navigation = [[Sparkles, 'Подбор экспертов'], [Files, 'Все заявки'], [Clock3, 'История заявок'], [UsersRound, 'Эксперты'], [Settings2, 'Настройки']] as const
   return <aside className={`sidebar ${collapsed ? 'sidebar--collapsed' : ''}`}>
-    <div className="brand-mark">ТюмГУ</div>
+    <div className="brand-mark"><img src={collapsed ? utmnLogoMini : utmnLogo} alt="ТюмГУ" /></div>
     {!collapsed && <div className="brand-copy"><span>НИОКР · ТЮМГУ</span><strong>Маршрутизатор<br />НИОКР</strong></div>}
     <nav>{navigation.map(([Icon, label], index) => <button className={index === 0 ? 'nav-item nav-item--active' : 'nav-item'} key={label} title={label}><Icon size={18} /><span>{label}</span></button>)}</nav>
     <div className="sidebar-bottom">
