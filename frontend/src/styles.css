@@ -1704,8 +1704,25 @@ textarea:focus-visible {
   cursor: pointer;
 }
 
-.candidate-card__open[aria-expanded='true'] svg {
-  transform: rotate(90deg);
+.candidate-card__info {
+  display: flex;
+  flex: 0 0 31px;
+  align-items: center;
+  justify-content: center;
+  width: 31px;
+  height: 31px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--muted);
+  background: #ffffff;
+  cursor: pointer;
+}
+
+.candidate-card__info[aria-expanded='true'] {
+  border-color: var(--brand);
+  color: var(--brand);
+  background: var(--brand-5);
 }
 
 .candidate-card__reasons {
@@ -1718,12 +1735,12 @@ textarea:focus-visible {
 
 .candidate-card__reasons p {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   margin: 0;
   gap: 8px;
   color: var(--muted);
-  font-size: 10px;
-  line-height: 1.35;
+  font-size: 12px;
+  line-height: 1.45;
 }
 
 .candidate-card__reasons p span {
@@ -2389,6 +2406,7 @@ textarea:focus-visible {
 .candidate-card,
 .candidate-card__checkbox,
 .candidate-card__open,
+.candidate-card__info,
 .subtask-card,
 .subtask-card__delete,
 .fact-card,
@@ -2409,6 +2427,7 @@ textarea:focus-visible {
 
 .candidate-card__checkbox:hover,
 .candidate-card__open:hover,
+.candidate-card__info:hover,
 .subtask-card__delete:hover {
   border-color: var(--brand);
   color: var(--brand);

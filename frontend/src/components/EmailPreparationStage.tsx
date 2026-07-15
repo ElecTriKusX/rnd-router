@@ -1,4 +1,4 @@
-import { ArrowLeft, Check, Info, WandSparkles } from 'lucide-react'
+import { ArrowLeft, Check, Info, LoaderCircle, WandSparkles } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import type { Candidate, RequestItem, Subtask } from '../types'
 
@@ -175,6 +175,7 @@ export function EmailPreparationStage({
           disabled={selectedFactIds.length === 0 || loading}
           onClick={() => onCreateDraft(facts.filter((fact) => selectedFactIds.includes(fact.id)))}
         >
+          {loading && <LoaderCircle className="button__spinner" size={14} />}
           <WandSparkles size={14} />
           {loading ? 'Создаём черновик…' : 'Создать черновик письма'}
         </button>

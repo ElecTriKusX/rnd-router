@@ -3,6 +3,7 @@ import {
   BriefcaseBusiness,
   Check,
   ChevronRight,
+  Info,
   Mail,
   Plus,
 } from 'lucide-react'
@@ -143,11 +144,21 @@ export function ResultsStage({
               <button
                 className="candidate-card__open"
                 type="button"
-                aria-label="Показать обоснование"
+                aria-label="Открыть карточку кандидата"
+                title="Открыть карточку кандидата"
+                onClick={() => onPrepareEmail(candidate, activeResult.subtask)}
+              >
+                <ChevronRight size={15} />
+              </button>
+              <button
+                className="candidate-card__info"
+                type="button"
+                aria-label="Показать обоснование рекомендации"
+                title="Обоснование рекомендации"
                 aria-expanded={expanded}
                 onClick={() => setExpandedCandidateId(expanded ? null : candidate.profile.id)}
               >
-                <ChevronRight size={15} />
+                <Info size={15} />
               </button>
             </div>
             {expanded && <div className="candidate-card__reasons">
@@ -174,7 +185,10 @@ export function ResultsStage({
           className="button button--primary"
           type="button"
           disabled={selectedCandidates.length === 0}
-          onClick={() => selectedCandidates[0] && onPrepareEmail(selectedCandidates[0], activeResult.subtask)}
+          onClick={() => {
+            const firstSelectedCandidate = selectedCandidates[0]
+            if (firstSelectedCandidate) onPrepareEmail(firstSelectedCandidate, activeResult.subtask)
+          }}
         >
           Разослать письма · {selectedCandidates.length}
           <Mail size={14} />
