@@ -44,3 +44,4 @@ data/index.parquet
 data/profiles_raw/
 frontend/node_modules/
 frontend/dist/
+frontend/tsconfig.tsbuildinfo
