@@ -1,0 +1,14 @@
+.git
+.idea
+.agents
+.pytest_cache
+**/__pycache__
+**/*.py[cod]
+.env
+.env.*
+!.env.example
+backend/.venv
+frontend/node_modules
+frontend/dist
+frontend/legacy-streamlit
+data/profiles_raw
