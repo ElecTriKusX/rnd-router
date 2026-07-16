@@ -83,6 +83,7 @@ cd backend
 uv run pytest
 
 # из корня проекта
+cd ..
 cd frontend
 npm run build
 ```
