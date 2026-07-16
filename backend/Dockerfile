@@ -5,13 +5,11 @@ WORKDIR /app/backend
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
-# Dependencies are installed before source code to keep this layer cached
-# between application changes. The container does not require uv.
 COPY backend/requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY backend/src ./src
-COPY data/profiles.json data/index.parquet /app/data/
+RUN mkdir -p /app/data
 COPY prompts /app/prompts
 
 EXPOSE 8000
