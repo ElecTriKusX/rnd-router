@@ -12,6 +12,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY backend/src ./src
 COPY data/profiles.json data/index.parquet /app/data/
+COPY prompts /app/prompts
 
 EXPOSE 8000
 
